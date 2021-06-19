@@ -5,37 +5,48 @@ import json, re
 
 from django.http        import JsonResponse
 from django.views       import View
+from django.core.exceptions import ValidationError
 
-from users.models       import Signup
+from .models       import Signup
+
+def email_check(email): 
+    return bool(re.match('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',email))
+
+def password_check(pw): 
+    return bool(re.match('.{8,45}', pw))
 
 
 class UsersView(View):
 
     def post(self, request): 
 
-        data  = json.loads(request.body)
-        p = re.compile( '^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$' )
+        try:
+            data  = json.loads(request.body)
+            email = data['email']
+            password    = data['password']
 
-        email = data['email']
-        password    = data['password']
+            if email and password:
+
+                if Signup.objects.filter(email=email).exists():
+                    return JsonResponse({'MESSAGE': 'EMAIL_ALREADY_EXISTS'}, status=400)
+
+                if Signup.objects.filter(password=password).exists():
+                    return JsonResponse({'MESSAGE': 'EMAIL_ALREADY_EXISTS'}, status=400)
+
+                if '@' not in email or '.' not in email:
+                    return JsonResponse({'MESSAGE' : 'INVALID_EMAIL'},status=400)
+
+                if len(password) < 8: 
+                    return JsonResponse({'MESSAGE' : 'INVALID_PASSWORD'},status=400)
+
+                signup = Signup.objects.create(
+                    email    = email,
+                    password = password
+                )
+
+            return JsonResponse({'message': 'SUCCESS'}, status=200)
 
         
-        
-        def email_check(email): 
-            return bool(re.match('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',email))
-
-        def password_check(pw): 
-            return bool(re.match('.{8,45}', pw))
-
-        if email == '' or password == '':
+        except KeyError:
             return JsonResponse({'MESSAGE': 'KEY_ERROR'}, status=400)
-
-        elif email_check(email) and password_check(password): 
-            signup = Signup.objects.create(
-                email    = email,
-                password = password
-            )
-                
-        
-            return JsonResponse({'MESSAGE': 'SUCCESS'}, status=201)    
          
