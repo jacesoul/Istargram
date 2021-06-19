@@ -24,6 +24,7 @@ class UsersView(View):
             data  = json.loads(request.body)
             email = data['email']
             password    = data['password']
+            print(email)
 
             if email and password:
 
@@ -31,12 +32,18 @@ class UsersView(View):
                     return JsonResponse({'MESSAGE': 'EMAIL_ALREADY_EXISTS'}, status=400)
 
                 if Signup.objects.filter(password=password).exists():
-                    return JsonResponse({'MESSAGE': 'EMAIL_ALREADY_EXISTS'}, status=400)
+                    return JsonResponse({'MESSAGE': 'PASSWORD_ALREADY_EXISTS'}, status=400)
 
-                if '@' not in email or '.' not in email:
+                # if '@' not in email or '.' not in email:
+                #     return JsonResponse({'MESSAGE' : 'INVALID_EMAIL'},status=400)
+
+                # if len(password) < 8: 
+                #     return JsonResponse({'MESSAGE' : 'INVALID_PASSWORD'},status=400)
+
+                if not email_check(email):
                     return JsonResponse({'MESSAGE' : 'INVALID_EMAIL'},status=400)
 
-                if len(password) < 8: 
+                if not password_check(password):
                     return JsonResponse({'MESSAGE' : 'INVALID_PASSWORD'},status=400)
 
                 signup = Signup.objects.create(
