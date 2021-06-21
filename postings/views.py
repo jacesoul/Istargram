@@ -39,3 +39,17 @@ class CreateCommentsView(View):
         )
         return JsonResponse({'MESSAGE':'SUCCESS'},status=200)
 
+    def get(self, request):
+        comments = Comment.objects.filter(title_id=3)
+        results=[]
+        for comment in comments:
+            results.append(
+                {
+                    "title" : comment.title.title,
+                    "comment_user" : comment.comment_user,
+                    "created_at" : comment.created_at,
+                    "content" : comment.content
+                }
+            )
+        return JsonResponse({"RESULT": results},status=200)
+
